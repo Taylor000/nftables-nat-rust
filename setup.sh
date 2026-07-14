@@ -2,8 +2,8 @@
 # NAT 服务安装脚本 - 默认使用本地简化配置，兼容 legacy 和 toml 配置格式
 
 REPO="Taylor000/nftables-nat-rust"
-VERSION="${VERSION:-v2.0.0}"
-RELEASE_BASE_URL="https://github.com/${REPO}/releases/download/${VERSION}"
+BRANCH="${BRANCH:-master}"
+RAW_BASE_URL="https://raw.githubusercontent.com/${REPO}/${BRANCH}"
 
 # 使用说明
 usage() {
@@ -50,7 +50,7 @@ prepare_system
 
 # 下载可执行文件
 echo "下载 nat 可执行文件..."
-curl -sSLf "${RELEASE_BASE_URL}/nat" -o /tmp/nat
+curl -sSLf "${RAW_BASE_URL}/bin/nat" -o /tmp/nat
 install /tmp/nat /usr/local/bin/nat
 
 # 根据配置类型设置不同的参数
