@@ -143,6 +143,20 @@ nft list table ip self-nat
 nft list table ip6 self-nat
 ```
 
+`ss -lntp` 看不到这些转发端口是正常的。这个工具创建的是 nftables DNAT 规则，不会启动进程监听本地端口。
+
+如果日志里只看到类似下面的内容，说明配置行被注释了，不会生成转发规则：
+
+```text
+# 33351:node.example.com:33344
+```
+
+有效规则不要带 `#`：
+
+```text
+33351:node.example.com:33344
+```
+
 ## 多网卡源 IP
 
 默认使用 `masquerade`。如果需要指定出口源 IP：

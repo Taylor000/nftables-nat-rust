@@ -135,6 +135,15 @@ fn handle_loop(args: &Args) -> Result<(), io::Error> {
                 continue;
             }
         };
+        let rule_count = nat_cells
+            .iter()
+            .filter(|cell| matches!(cell, config::RuntimeCell::Rule(_)))
+            .count();
+        if rule_count == 0 {
+            error!(
+                "配置文件未解析到任何有效规则，请检查 {conf_path} 中的转发行是否被 # 注释"
+            );
+        }
         let script = build_new_script(&nat_cells)?;
         prepare::check_and_prepare()?;
         if script != latest_script {
