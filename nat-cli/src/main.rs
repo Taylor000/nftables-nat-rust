@@ -10,15 +10,17 @@ use log::{error, info};
 use nat_common::{Args, logger};
 use std::fs::File;
 use std::io::{self, Write};
+use std::path::Path;
 use std::process::Command;
 use std::thread::sleep;
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 
 const NFTABLES_ETC: &str = "/etc/nftables-nat";
 const FILE_NAME_SCRIPT: &str = "/etc/nftables-nat/nat-diy.nft";
 const IP_FORWARD: &str = "/proc/sys/net/ipv4/ip_forward";
 const IPV6_FORWARD: &str = "/proc/sys/net/ipv6/conf/all/forwarding";
 const CARGO_CRATE_NAME: &str = env!("CARGO_CRATE_NAME");
+const DEFAULT_CONFIG_FILE: &str = "/etc/nat.conf";
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     logger::init(CARGO_CRATE_NAME);
@@ -37,13 +39,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn parse_conf(
     args: &Args,
 ) -> Result<Vec<config::RuntimeCell>, Box<dyn std::error::Error + Send + Sync>> {
-    let nat_cells = if let Some(compatible_config_file) = &args.compatible_config_file {
-        config::read_config(compatible_config_file).map_err(|e| {
-            info!("读取配置文件失败: {e:?}");
-            config::example(compatible_config_file);
-            e
-        })?
-    } else if let Some(toml) = &args.toml {
+    let nat_cells = if let Some(toml) = &args.toml {
         config::read_toml_config(toml).map_err(|e| {
             info!("读取配置文件失败: {e:?}");
             if let Err(e) = config::toml_example(toml) {
@@ -52,9 +48,31 @@ fn parse_conf(
             e
         })?
     } else {
-        return Err("请提供配置文件路径".into());
+        let config_file = config_path(args);
+        config::read_config(&config_file).map_err(|e| {
+            info!("读取配置文件失败: {e:?}");
+            config::example(&config_file);
+            e
+        })?
     };
     Ok(nat_cells)
+}
+
+fn config_path(args: &Args) -> String {
+    if let Some(toml) = &args.toml {
+        toml.clone()
+    } else {
+        args.compatible_config_file
+            .clone()
+            .unwrap_or_else(|| DEFAULT_CONFIG_FILE.to_string())
+    }
+}
+
+fn config_modified(path: &str) -> Option<SystemTime> {
+    Path::new(path)
+        .metadata()
+        .ok()
+        .and_then(|metadata| metadata.modified().ok())
 }
 
 fn global_prepare() -> Result<(), io::Error> {
@@ -99,16 +117,21 @@ fn global_prepare() -> Result<(), io::Error> {
 
 fn handle_loop(args: &Args) -> Result<(), io::Error> {
     let mut latest_script = String::new();
+    let conf_path = config_path(args);
+    let mut latest_config_mtime = config_modified(&conf_path);
     loop {
+        let current_config_mtime = config_modified(&conf_path);
+        let config_changed = current_config_mtime != latest_config_mtime;
+        if config_changed {
+            info!("检测到配置文件变化，重新加载服务配置: {conf_path}");
+            latest_config_mtime = current_config_mtime;
+        }
+
         let nat_cells = match parse_conf(args) {
             Ok(cells) => cells,
             Err(e) => {
                 error!("解析配置文件失败: {e:?}");
-                if cfg!(debug_assertions) {
-                    sleep(Duration::from_secs(5));
-                } else {
-                    sleep(Duration::new(60, 0));
-                }
+                wait_for_next_reload(&conf_path, latest_config_mtime);
                 continue;
             }
         };
@@ -139,12 +162,24 @@ fn handle_loop(args: &Args) -> Result<(), io::Error> {
             info!("WAIT:等待配置或目标IP发生改变....\n");
         }
 
-        if cfg!(debug_assertions) {
-            sleep(Duration::from_secs(5));
-        } else {
-            //等待60秒
-            sleep(Duration::new(60, 0));
+        wait_for_next_reload(&conf_path, latest_config_mtime);
+    }
+}
+
+fn wait_for_next_reload(conf_path: &str, latest_config_mtime: Option<SystemTime>) {
+    let max_wait = if cfg!(debug_assertions) {
+        Duration::from_secs(5)
+    } else {
+        Duration::from_secs(60)
+    };
+    let mut waited = Duration::ZERO;
+
+    while waited < max_wait {
+        sleep(Duration::from_secs(1));
+        if config_modified(conf_path) != latest_config_mtime {
+            return;
         }
+        waited += Duration::from_secs(1);
     }
 }
 

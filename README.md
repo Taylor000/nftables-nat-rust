@@ -10,7 +10,7 @@
 - 🔄 **动态 NAT 转发**：自动监测配置文件和目标域名 IP 变化，实时更新转发规则
 - 🛡️ **防火墙过滤**：支持 Drop 功能，实现类似防火墙的黑名单过滤（INPUT/FORWARD链）
 - 🌐 **IPv4/IPv6 双栈支持**：完整支持 IPv4 和 IPv6 NAT 转发和过滤
-- 📝 **灵活配置**：支持传统配置文件和 TOML 格式，满足不同使用场景
+- 📝 **灵活配置**：默认支持简化本地配置，也兼容传统配置文件和 TOML 格式
 - 🎯 **精准控制**：支持单端口、端口段、TCP/UDP 协议选择、IP地址和网段过滤
 - 🔌 **本地重定向**：支持端口重定向到本机其他端口
 - 🐋 **Docker 兼容**：与 Docker 网络完美兼容
@@ -57,13 +57,19 @@ systemctl disable --now iptables
 
 > 升级也使用相同的安装命令
 
-### 方法一：TOML 配置文件版本（推荐）
+### 方法一：简化本地配置文件版本（推荐）
+
+```bash
+bash <(curl -sSLf https://us.arloor.dev/https://github.com/arloor/nftables-nat-rust/releases/download/v2.0.0/setup.sh)
+```
+
+### 方法二：TOML 配置文件版本
 
 ```bash
 bash <(curl -sSLf https://us.arloor.dev/https://github.com/arloor/nftables-nat-rust/releases/download/v2.0.0/setup.sh) toml
 ```
 
-### 方法二：传统配置文件版本
+### 方法三：传统配置文件版本
 
 ```bash
 bash <(curl -sSLf https://us.arloor.dev/https://github.com/arloor/nftables-nat-rust/releases/download/v2.0.0/setup.sh) legacy
@@ -113,7 +119,32 @@ systemctl restart nat-console
 
 ## 📝 配置说明
 
-### TOML 配置文件（推荐）
+### 简化本地配置文件（推荐）
+
+配置文件位置：`/etc/nat.conf`
+
+每行一条转发规则：
+
+```text
+本地端口:远程IP或域名:远程端口
+```
+
+示例：
+
+```text
+# 本机 10000 端口转发到 1.2.3.4:443
+10000:1.2.3.4:443
+
+# 也可以使用域名
+10001:example.com:443
+
+# IPv6 地址也支持
+10002:[2001:db8::1]:443
+```
+
+简化格式会自动转换为程序内部的 `type = "single"`，并默认使用 `protocol = "all"`、`ip_version = "all"`。服务会监听配置文件修改，保存后自动重新加载 nftables 规则。
+
+### TOML 配置文件
 
 配置文件位置：`/etc/nat.toml`
 

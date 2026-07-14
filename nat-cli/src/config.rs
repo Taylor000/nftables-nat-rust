@@ -409,6 +409,10 @@ fn parse_legacy_line(line: &str) -> Option<RuntimeCell> {
         return Some(RuntimeCell::Comment(line.to_string()));
     }
 
+    if let Some(cell) = parse_simple_single_line(line) {
+        return Some(RuntimeCell::Rule(cell));
+    }
+
     // 使用 nat-common 的 TryFrom 解析（包括NAT规则和Drop规则）
     match NftCell::try_from(line) {
         Ok(cell) => Some(RuntimeCell::Rule(cell)),
@@ -420,11 +424,44 @@ fn parse_legacy_line(line: &str) -> Option<RuntimeCell> {
     }
 }
 
+/// 解析简化配置行：本地端口:远程IP/域名:远程端口
+/// 默认转换为 type = "single"，protocol = "all"，ip_version = "all"。
+fn parse_simple_single_line(line: &str) -> Option<NftCell> {
+    let (sport, remote) = line.split_once(':')?;
+    let (domain, dport) = remote.rsplit_once(':')?;
+    let sport = sport.trim();
+    let domain = domain.trim();
+    let dport = dport.trim();
+    if sport.is_empty() || domain.is_empty() || dport.is_empty() {
+        return None;
+    }
+
+    let sport = match sport.parse::<u16>() {
+        Ok(port) => port,
+        Err(_) => return None,
+    };
+    let dport = match dport.parse::<u16>() {
+        Ok(port) => port,
+        Err(_) => return None,
+    };
+
+    Some(NftCell::Single {
+        sport,
+        dport,
+        domain: domain.trim_matches(&['[', ']'][..]).to_string(),
+        protocol: Protocol::All,
+        ip_version: IpVersion::All,
+        comment: None,
+    })
+}
+
 pub(crate) fn example(conf: &str) {
     info!("请在 {} 编写转发规则，内容类似：", &conf);
     info!(
         "{}",
-        "SINGLE,10000,443,baidu.com,all,ipv4\n\
+        "10000:1.2.3.4:443\n\
+                    # 简化格式: 本地端口:远程IP或域名:远程端口\n\
+                    SINGLE,10000,443,baidu.com,all,ipv4\n\
                     RANGE,1000,2000,baidu.com,tcp,ipv6\n\
                     REDIRECT,8000,3128,all,ipv4\n\
                     REDIRECT,8000-9000,3128,tcp,all\n\
@@ -453,6 +490,57 @@ pub fn read_config(conf: &str) -> Result<Vec<RuntimeCell>, io::Error> {
         }
     }
     Ok(cells)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_simple_single_line_defaults_to_single_all() {
+        let cell = parse_simple_single_line("10000:1.2.3.4:443");
+        match cell {
+            Some(NftCell::Single {
+                sport,
+                dport,
+                domain,
+                protocol,
+                ip_version,
+                ..
+            }) => {
+                assert_eq!(sport, 10000);
+                assert_eq!(dport, 443);
+                assert_eq!(domain, "1.2.3.4");
+                assert_eq!(protocol, Protocol::All);
+                assert_eq!(ip_version, IpVersion::All);
+            }
+            _ => panic!("expected single rule"),
+        }
+    }
+
+    #[test]
+    fn parse_simple_single_line_ignores_other_formats() {
+        assert!(
+            parse_simple_single_line("SINGLE,10000,443,example.com")
+                .is_none()
+        );
+        assert!(parse_simple_single_line("10000:example.com").is_none());
+    }
+
+    #[test]
+    fn parse_simple_single_line_supports_ipv6() {
+        let cell = parse_simple_single_line("10000:2001:db8::1:443");
+        match cell {
+            Some(NftCell::Single { domain, .. }) => assert_eq!(domain, "2001:db8::1"),
+            _ => panic!("expected single rule"),
+        }
+
+        let cell = parse_simple_single_line("10000:[2001:db8::1]:443");
+        match cell {
+            Some(NftCell::Single { domain, .. }) => assert_eq!(domain, "2001:db8::1"),
+            _ => panic!("expected single rule"),
+        }
+    }
 }
 
 // 读取TOML配置文件

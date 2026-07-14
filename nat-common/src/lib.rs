@@ -10,8 +10,8 @@ pub mod logger;
 #[derive(Parser, Debug, Clone)]
 #[command(author, version, about, long_about = None)]
 pub struct Args {
-    /// 配置文件路径
-    #[arg(value_name = "CONFIG_FILE", help = "老版本配置文件")]
+    /// 配置文件路径，默认读取 /etc/nat.conf
+    #[arg(value_name = "CONFIG_FILE", help = "本地配置文件")]
     pub compatible_config_file: Option<String>,
     #[arg(long, value_name = "TOML_CONFIG", help = "toml配置文件")]
     pub toml: Option<String>,

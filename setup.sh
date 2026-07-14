@@ -1,27 +1,23 @@
 #!/bin/bash
-# NAT 服务安装脚本 - 支持 legacy 和 toml 配置格式
+# NAT 服务安装脚本 - 默认使用本地简化配置，兼容 legacy 和 toml 配置格式
 
 # 使用说明
 usage() {
-    echo "用法: $0 [legacy|toml]"
+    echo "用法: $0 [simple|legacy|toml]"
+    echo "  simple - 使用简化本地配置格式 (/etc/nat.conf)，默认"
     echo "  legacy - 使用传统配置格式 (/etc/nat.conf)"
     echo "  toml   - 使用 TOML 配置格式 (/etc/nat.toml)"
     echo ""
     echo "示例:"
-    echo "  $0 legacy"
+    echo "  $0 simple"
     echo "  $0 toml"
     exit 1
 }
 
 # 检查参数
-if [ $# -eq 0 ]; then
-    echo "错误: 缺少配置格式参数"
-    usage
-fi
+CONFIG_TYPE="${1:-simple}"
 
-CONFIG_TYPE="$1"
-
-if [ "$CONFIG_TYPE" != "legacy" ] && [ "$CONFIG_TYPE" != "toml" ]; then
+if [ "$CONFIG_TYPE" != "simple" ] && [ "$CONFIG_TYPE" != "legacy" ] && [ "$CONFIG_TYPE" != "toml" ]; then
     echo "错误: 无效的配置格式 '$CONFIG_TYPE'"
     usage
 fi
@@ -38,7 +34,11 @@ curl -sSLf https://us.arloor.dev/https://github.com/arloor/nftables-nat-rust/rel
 install /tmp/nat /usr/local/bin/nat
 
 # 根据配置类型设置不同的参数
-if [ "$CONFIG_TYPE" = "legacy" ]; then
+if [ "$CONFIG_TYPE" = "simple" ]; then
+    EXEC_START="/usr/local/bin/nat"
+    CONFIG_FILE="/etc/nat.conf"
+    EXAMPLE_FILE="/etc/nat_example.conf"
+elif [ "$CONFIG_TYPE" = "legacy" ]; then
     EXEC_START="/usr/local/bin/nat /etc/nat.conf"
     CONFIG_FILE="/etc/nat.conf"
     EXAMPLE_FILE="/etc/nat_example.conf"
@@ -78,18 +78,21 @@ systemctl daemon-reload
 systemctl enable nat
 
 # 根据配置类型创建配置文件
-if [ "$CONFIG_TYPE" = "legacy" ]; then
-    echo "创建 legacy 格式配置文件..."
+if [ "$CONFIG_TYPE" = "simple" ] || [ "$CONFIG_TYPE" = "legacy" ]; then
+    echo "创建本地配置文件..."
     if [ ! -s "$CONFIG_FILE" ]; then
         cat > "$CONFIG_FILE" <<EOF
 # 配置方式参考 https://github.com/arloor/nftables-nat-rust/blob/master/README.md#%E4%BC%A0%E7%BB%9F%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6
+# 简化格式：本地端口:远程IP或域名:远程端口
 EOF
     fi
     
     # 生成示例配置文件
     cat > "$EXAMPLE_FILE" <<EOF
 # 单端口转发：本机端口 -> 目标地址:端口
-SINGLE,49999,59999,example.com
+49999:example.com:59999
+# 老格式仍然兼容
+SINGLE,10000,443,example.com,tcp
 # 端口段转发：本机端口段 -> 目标地址:端口段
 RANGE,50000,50010,example.com
 # 端口重定向：外部端口 -> 本机端口
