@@ -169,22 +169,6 @@ nft list table ip6 self-nat
 33351:node.example.com:33344
 ```
 
-## 多网卡源 IP
-
-默认使用 `masquerade`。如果需要指定出口源 IP：
-
-```bash
-echo "nat_local_ip=10.10.10.10" > /opt/nat/env
-systemctl restart nat
-```
-
-IPv6：
-
-```bash
-echo "nat_local_ipv6=2001:db8::10" >> /opt/nat/env
-systemctl restart nat
-```
-
 ## 注意
 
 - `REDIRECT` 工作在 `PREROUTING` 链，只对外部访问有效，本机访问不会触发。
