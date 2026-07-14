@@ -1,6 +1,10 @@
 #!/bin/bash
 # NAT 服务安装脚本 - 默认使用本地简化配置，兼容 legacy 和 toml 配置格式
 
+REPO="Taylor000/nftables-nat-rust"
+VERSION="${VERSION:-v2.0.0}"
+RELEASE_BASE_URL="https://github.com/${REPO}/releases/download/${VERSION}"
+
 # 使用说明
 usage() {
     echo "用法: $0 [simple|legacy|toml]"
@@ -46,7 +50,7 @@ prepare_system
 
 # 下载可执行文件
 echo "下载 nat 可执行文件..."
-curl -sSLf https://us.arloor.dev/https://github.com/arloor/nftables-nat-rust/releases/download/v2.0.0/nat -o /tmp/nat
+curl -sSLf "${RELEASE_BASE_URL}/nat" -o /tmp/nat
 install /tmp/nat /usr/local/bin/nat
 
 # 根据配置类型设置不同的参数
@@ -98,7 +102,7 @@ if [ "$CONFIG_TYPE" = "simple" ] || [ "$CONFIG_TYPE" = "legacy" ]; then
     echo "创建本地配置文件..."
     if [ ! -s "$CONFIG_FILE" ]; then
         cat > "$CONFIG_FILE" <<EOF
-# 配置方式参考 https://github.com/arloor/nftables-nat-rust/blob/master/README.md#%E4%BC%A0%E7%BB%9F%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6
+# 配置方式参考 https://github.com/${REPO}
 # 简化格式：本地端口:远程IP或域名:远程端口
 EOF
     fi
@@ -127,7 +131,7 @@ else
     # Check if /etc/nat.toml exists, if not create it with example content
     if [ ! -s "$CONFIG_FILE" ]; then
         cat > "$CONFIG_FILE" <<EOF
-# 配置方式参考 https://github.com/arloor/nftables-nat-rust/blob/master/README.md#toml-%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E6%8E%A8%E8%8D%90
+# 配置方式参考 https://github.com/${REPO}
 rules = []
 EOF
     fi

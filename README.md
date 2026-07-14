@@ -27,7 +27,7 @@
 默认安装简化配置模式：
 
 ```bash
-bash <(curl -sSLf https://us.arloor.dev/https://github.com/arloor/nftables-nat-rust/releases/download/v2.0.0/setup.sh)
+bash <(curl -sSLf https://raw.githubusercontent.com/Taylor000/nftables-nat-rust/master/setup.sh)
 ```
 
 安装脚本会自动完成这些步骤：
@@ -110,7 +110,7 @@ DROP,input,src_ip=1.2.3.4,dst_port=22,tcp
 TOML 模式仍然保留：
 
 ```bash
-bash <(curl -sSLf https://us.arloor.dev/https://github.com/arloor/nftables-nat-rust/releases/download/v2.0.0/setup.sh) toml
+bash <(curl -sSLf https://raw.githubusercontent.com/Taylor000/nftables-nat-rust/master/setup.sh) toml
 ```
 
 ## 服务管理

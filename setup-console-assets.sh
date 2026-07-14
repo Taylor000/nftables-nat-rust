@@ -1,6 +1,8 @@
 # 下载 nat-console
 echo "下载 nat-console..."
-DOWNLOAD_URL="https://us.arloor.dev/https://github.com/arloor/nftables-nat-rust/releases/download/v2.0.0/nat-console"
+REPO="Taylor000/nftables-nat-rust"
+VERSION="${VERSION:-v2.0.0}"
+DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${VERSION}/nat-console"
 TMP_FILE="/tmp/nat-console"
 INSTALL_PATH="/usr/local/bin/nat-console"
 
