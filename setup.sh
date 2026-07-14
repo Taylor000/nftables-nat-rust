@@ -104,6 +104,8 @@ if [ "$CONFIG_TYPE" = "simple" ] || [ "$CONFIG_TYPE" = "legacy" ]; then
         cat > "$CONFIG_FILE" <<EOF
 # 配置方式参考 https://github.com/${REPO}
 # 简化格式：本地端口:远程IP或域名:远程端口
+# 注意：vim 在注释行回车时可能自动补 #，有效规则行前面不要带 #
+
 EOF
     fi
     

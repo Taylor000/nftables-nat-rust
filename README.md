@@ -157,6 +157,18 @@ nft list table ip6 self-nat
 33351:node.example.com:33344
 ```
 
+如果用 `vi` / `vim` 编辑时，回车后下一行自动出现 `#`，这是编辑器的自动续注释功能。可以在 vim 里执行：
+
+```vim
+:set formatoptions-=r formatoptions-=o
+```
+
+也可以直接删掉行首的 `#`，确保真正的转发行长这样：
+
+```text
+33351:node.example.com:33344
+```
+
 ## 多网卡源 IP
 
 默认使用 `masquerade`。如果需要指定出口源 IP：
