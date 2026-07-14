@@ -22,29 +22,33 @@
 - 支持 systemd 开机自启
 - 兼容旧格式和 TOML 格式
 
-## 系统准备
-
-我的服务器基本都是 Debian / Ubuntu，先安装基础依赖：
-
-```bash
-apt update
-apt install -y curl nftables
-systemctl enable --now nftables
-```
-
-如果服务器上启用了旧的 `iptables` 服务，可以按需关闭：
-
-```bash
-systemctl disable --now iptables 2>/dev/null || true
-systemctl disable --now ip6tables 2>/dev/null || true
-```
-
-## 安装
+## 一键安装
 
 默认安装简化配置模式：
 
 ```bash
 bash <(curl -sSLf https://us.arloor.dev/https://github.com/arloor/nftables-nat-rust/releases/download/v2.0.0/setup.sh)
+```
+
+安装脚本会自动完成这些步骤：
+
+- 安装基础依赖：`curl`、`nftables`
+- 启用 `nftables`
+- 尝试关闭旧的 `iptables` / `ip6tables` 服务
+- 下载并安装 `/usr/local/bin/nat`
+- 创建 `/etc/nat.conf`
+- 创建并启动 `nat.service`
+
+## 手动准备
+
+一般不需要手动执行。排查环境问题时可以单独运行：
+
+```bash
+apt update
+apt install -y curl nftables
+systemctl enable --now nftables
+systemctl disable --now iptables 2>/dev/null || true
+systemctl disable --now ip6tables 2>/dev/null || true
 ```
 
 安装后会创建：

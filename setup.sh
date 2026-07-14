@@ -14,6 +14,20 @@ usage() {
     exit 1
 }
 
+prepare_system() {
+    echo "准备系统环境..."
+
+    if command -v apt-get >/dev/null 2>&1; then
+        apt-get update
+        apt-get install -y curl nftables
+        systemctl enable --now nftables
+        systemctl disable --now iptables 2>/dev/null || true
+        systemctl disable --now ip6tables 2>/dev/null || true
+    else
+        echo "未检测到 apt-get，跳过自动安装依赖。请手动安装 curl 和 nftables。"
+    fi
+}
+
 # 检查参数
 CONFIG_TYPE="${1:-simple}"
 
@@ -27,6 +41,8 @@ if [ "$(id -u)" -ne 0 ]; then
     echo "Please run as root"
     exit 1
 fi
+
+prepare_system
 
 # 下载可执行文件
 echo "下载 nat 可执行文件..."
