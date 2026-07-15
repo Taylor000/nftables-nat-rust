@@ -32,13 +32,13 @@ bash <(curl -sSLf https://raw.githubusercontent.com/Taylor000/nftables-nat-rust/
 
 ## 一键清理 / 卸载
 
-只移除本项目生成的 nftables 规则，保留程序和配置：
+停止并取消 `nat.service` 开机自启，移除本项目生成的 nftables 规则，保留程序和 `/etc/nat.conf`：
 
 ```bash
 bash <(curl -sSLf https://raw.githubusercontent.com/Taylor000/nftables-nat-rust/master/clear-rules.sh)
 ```
 
-完整卸载 `nat.service`、程序文件和本项目生成的 nftables 规则，默认保留 `/etc/nat.conf`：
+完整卸载 `nat.service`、程序文件，并清理本项目生成的 nftables 规则。默认保留 `/etc/nat.conf`：
 
 ```bash
 bash <(curl -sSLf https://raw.githubusercontent.com/Taylor000/nftables-nat-rust/master/uninstall.sh)
@@ -59,6 +59,8 @@ bash <(curl -sSLf https://raw.githubusercontent.com/Taylor000/nftables-nat-rust/
 ```
 
 脚本会备份并保留 `/etc/nat.conf`，停止并禁用 `realm.service`，然后安装并启动 `nat.service`。
+
+执行一键安装或切回 nft 后，`nat.service` 会重新读取 `/etc/nat.conf` 并恢复开机自启。
 
 安装脚本会自动完成这些步骤：
 
