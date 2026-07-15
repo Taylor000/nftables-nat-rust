@@ -30,6 +30,26 @@
 bash <(curl -sSLf https://raw.githubusercontent.com/Taylor000/nftables-nat-rust/master/setup.sh)
 ```
 
+## 一键清理 / 卸载
+
+只移除本项目生成的 nftables 规则，保留程序和配置：
+
+```bash
+bash <(curl -sSLf https://raw.githubusercontent.com/Taylor000/nftables-nat-rust/master/clear-rules.sh)
+```
+
+完整卸载 `nat.service`、程序文件和本项目生成的 nftables 规则，默认保留 `/etc/nat.conf`：
+
+```bash
+bash <(curl -sSLf https://raw.githubusercontent.com/Taylor000/nftables-nat-rust/master/uninstall.sh)
+```
+
+如果连配置文件也要一起删：
+
+```bash
+REMOVE_NAT_CONFIG=1 bash <(curl -sSLf https://raw.githubusercontent.com/Taylor000/nftables-nat-rust/master/uninstall.sh)
+```
+
 安装脚本会自动完成这些步骤：
 
 - 安装基础依赖：`curl`、`nftables`
