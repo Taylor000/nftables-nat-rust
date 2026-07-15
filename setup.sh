@@ -79,6 +79,7 @@ cat > /lib/systemd/system/nat.service <<EOF
 Description=nat-service
 After=network-online.target
 Wants=network-online.target
+Conflicts=realm.service
 
 [Service]
 WorkingDirectory=-/opt/nat

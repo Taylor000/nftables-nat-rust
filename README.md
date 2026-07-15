@@ -50,6 +50,16 @@ bash <(curl -sSLf https://raw.githubusercontent.com/Taylor000/nftables-nat-rust/
 REMOVE_NAT_CONFIG=1 bash <(curl -sSLf https://raw.githubusercontent.com/Taylor000/nftables-nat-rust/master/uninstall.sh)
 ```
 
+## 从 Realm 切回 nft
+
+两个项目共用 `/etc/nat.conf`。如果当前使用 Realm，执行：
+
+```bash
+bash <(curl -sSLf https://raw.githubusercontent.com/Taylor000/nftables-nat-rust/master/switch-to-nft.sh)
+```
+
+脚本会备份并保留 `/etc/nat.conf`，停止并禁用 `realm.service`，然后安装并启动 `nat.service`。
+
 安装脚本会自动完成这些步骤：
 
 - 安装基础依赖：`curl`、`nftables`
