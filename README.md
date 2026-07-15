@@ -167,6 +167,12 @@ systemctl enable nat
 journalctl -fu nat
 ```
 
+## 快速查看当前使用哪个服务
+
+```bash
+forward-status
+```
+
 ## 查看 nftables 规则
 
 ```bash

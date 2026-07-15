@@ -46,4 +46,4 @@ jobs:
           fi
           git config --local user.email "admin@arloor.com"
           git config --local user.name "arloor"
-          gh release create ${version} ${{ steps.build_zigbuild.outputs.release_dir }}/nat ${{ steps.build_zigbuild.outputs.release_dir }}/nat-console setup.sh setup-console.sh setup-console-assets.sh -n "$version" -t "$version" --latest
+          gh release create ${version} ${{ steps.build_zigbuild.outputs.release_dir }}/nat ${{ steps.build_zigbuild.outputs.release_dir }}/nat-console setup.sh setup-console.sh setup-console-assets.sh clear-rules.sh uninstall.sh switch-to-nft.sh status.sh -n "$version" -t "$version" --latest

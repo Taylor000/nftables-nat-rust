@@ -52,6 +52,8 @@ prepare_system
 echo "下载 nat 可执行文件..."
 curl -sSLf "${RAW_BASE_URL}/bin/nat" -o /tmp/nat
 install /tmp/nat /usr/local/bin/nat
+curl -sSLf "${RAW_BASE_URL}/status.sh" -o /usr/local/bin/forward-status
+chmod 755 /usr/local/bin/forward-status
 
 # 根据配置类型设置不同的参数
 if [ "$CONFIG_TYPE" = "simple" ]; then
@@ -216,4 +218,5 @@ echo "  停止服务: systemctl stop nat"
 echo "  启动服务: systemctl start nat"
 echo "  重启服务: systemctl restart nat"
 echo "  查看日志: journalctl -u nat -f"
+echo "  当前后端: forward-status"
 echo "========================================="
